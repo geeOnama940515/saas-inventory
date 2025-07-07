@@ -6,13 +6,15 @@ import { IssueItemModal } from "@/components/inventory/issue-item-modal";
 import { mockInventoryItems } from "@/lib/mock-data";
 import { InventoryItem, StockMovement } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, User, Hash, Building2, Calendar, ClipboardCheck, Truck, FileText, CheckCircle, Send, ListPlus } from 'lucide-react';
+import { Plus, User, Hash, Building2, Calendar, ClipboardCheck, Truck, FileText, CheckCircle, Send, ListPlus, Trash2, Eye } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandInput, CommandItem, CommandList, CommandEmpty } from '@/components/ui/command';
 
 // Issuance type for multiple items
 interface IssuanceItem {
@@ -82,6 +84,8 @@ export default function IssuancesPage() {
   // Items table
   const [formItems, setFormItems] = useState<IssuanceItem[]>([]);
   const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [itemSearchOpen, setItemSearchOpen] = useState(false);
+  const [viewIssuance, setViewIssuance] = useState<Issuance | null>(null);
 
   const handleAddOrEditItem = () => {
     const itemObj: IssuanceItem = {
@@ -173,11 +177,11 @@ export default function IssuancesPage() {
             <TableHead>Requestor</TableHead>
             <TableHead>Department</TableHead>
             <TableHead>Request #</TableHead>
-            <TableHead>Items</TableHead>
             <TableHead>Note/s</TableHead>
             <TableHead>Approved By</TableHead>
             <TableHead>Released By</TableHead>
             <TableHead>Date Released</TableHead>
+            <TableHead>Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -187,20 +191,15 @@ export default function IssuancesPage() {
               <TableCell>{iss.requestor}</TableCell>
               <TableCell>{iss.department}</TableCell>
               <TableCell>{iss.requestNumber}</TableCell>
-              <TableCell>
-                <ul className="list-disc ml-4">
-                  {iss.items.map((item, idx) => (
-                    <li key={idx}>
-                      <span className="font-medium">{item.inventoryItem?.name || item.inventoryItemId}</span>
-                      {": "}Qty {item.quantity}
-                    </li>
-                  ))}
-                </ul>
-              </TableCell>
               <TableCell>{iss.notes}</TableCell>
               <TableCell>{iss.approvedBy}</TableCell>
               <TableCell>{iss.releasedBy}</TableCell>
               <TableCell>{iss.dateReleased}</TableCell>
+              <TableCell>
+                <Button size="icon" variant="outline" onClick={() => setViewIssuance(iss)} aria-label="View">
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -208,7 +207,7 @@ export default function IssuancesPage() {
 
       {/* New Issuance Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto p-0">
           <div className="flex flex-col min-h-[70vh]">
             <DialogHeader className="px-6 pt-6 pb-2">
               <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
@@ -254,16 +253,39 @@ export default function IssuancesPage() {
                 <div className="flex flex-col md:flex-row gap-4 items-end">
                   <div className="flex-1">
                     <Label>Item</Label>
-                    <Select value={itemId} onValueChange={setItemId}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Item" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockInventoryItems.map(item => (
-                          <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={itemSearchOpen} onOpenChange={setItemSearchOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={itemSearchOpen}
+                          className="w-full justify-between"
+                        >
+                          {mockInventoryItems.find(i => i.id === itemId)?.name || 'Select Item'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search item..." />
+                          <CommandList>
+                            <CommandEmpty>No item found.</CommandEmpty>
+                            {mockInventoryItems.map(item => (
+                              <CommandItem
+                                key={item.id}
+                                value={item.name}
+                                onSelect={() => {
+                                  setItemId(item.id);
+                                  setItemSearchOpen(false);
+                                }}
+                              >
+                                {item.name}
+                              </CommandItem>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div>
                     <Label>Quantity</Label>
@@ -300,8 +322,14 @@ export default function IssuancesPage() {
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>{item.notes}</TableCell>
                         <TableCell>
-                          <Button type="button" size="sm" variant="outline" onClick={() => handleEditItem(idx)} className="mr-2"><FileText className="h-4 w-4 mr-1" />Edit</Button>
-                          <Button type="button" size="sm" variant="destructive" onClick={() => handleRemoveItem(idx)}><CheckCircle className="h-4 w-4 mr-1" />Remove</Button>
+                          <div className="flex flex-row gap-2">
+                            <Button type="button" size="icon" variant="outline" onClick={() => handleEditItem(idx)} aria-label="Edit">
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                            <Button type="button" size="icon" variant="destructive" onClick={() => handleRemoveItem(idx)} aria-label="Remove">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -346,7 +374,7 @@ export default function IssuancesPage() {
                 </div>
               </div>
             </form>
-            <div className="px-6 pb-6 pt-2 border-t bg-white w-full flex justify-end gap-2">
+            <div className="px-6 pb-6 pt-2 border-t bg-white w-full flex flex-row justify-end gap-2 flex-nowrap">
               <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
                 Cancel
               </Button>
@@ -355,6 +383,60 @@ export default function IssuancesPage() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Issuance Modal */}
+      <Dialog open={!!viewIssuance} onOpenChange={open => !open && setViewIssuance(null)}>
+        <DialogContent className="max-w-2xl w-full">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl font-bold">
+              <Eye className="h-6 w-6 text-blue-600" />
+              Issuance Details
+            </DialogTitle>
+          </DialogHeader>
+          {viewIssuance && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><strong>Requestor:</strong> {viewIssuance.requestor}</div>
+                <div><strong>Request #:</strong> {viewIssuance.requestNumber}</div>
+                <div><strong>Department:</strong> {viewIssuance.department}</div>
+                <div><strong>Date Requested:</strong> {viewIssuance.dateRequested}</div>
+                <div><strong>Approved By:</strong> {viewIssuance.approvedBy}</div>
+                <div><strong>Released By:</strong> {viewIssuance.releasedBy}</div>
+                <div><strong>Date Released:</strong> {viewIssuance.dateReleased}</div>
+              </div>
+              <div>
+                <strong>Note/s:</strong>
+                <div className="bg-gray-50 rounded p-2 mt-1 text-gray-700 whitespace-pre-line">
+                  {viewIssuance.notes || <span className="italic text-gray-400">No notes</span>}
+                </div>
+              </div>
+              <div>
+                <strong>Items:</strong>
+                <Table className="mt-2">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Note/s</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {viewIssuance.items.map((item, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>{item.inventoryItem?.name || item.inventoryItemId}</TableCell>
+                        <TableCell>{item.inventoryItem?.description || '-'}</TableCell>
+                        <TableCell>{item.quantity}</TableCell>
+                        <TableCell>{item.notes}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
