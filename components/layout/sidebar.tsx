@@ -20,6 +20,7 @@ import {
   PackageCheck,
   ArrowRightLeft,
   Trash2,
+  User
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -38,6 +39,12 @@ export function Sidebar() {
       name: 'Inventory', 
       href: '/inventory', 
       icon: Package,
+      show: permissions.canViewInventory 
+    },
+    { 
+      name: 'Issuances', 
+      href: '/issuances', 
+      icon: User,
       show: permissions.canViewInventory 
     },
     { 

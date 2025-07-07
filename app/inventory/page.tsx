@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { InventoryTable } from '@/components/inventory/inventory-table';
 import { AddItemModal } from '@/components/inventory/add-item-modal';
 import { StockReleaseModal } from '@/components/inventory/stock-release-modal';
+import { IssueItemModal } from '@/components/inventory/issue-item-modal';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { mockInventoryItems, mockCategories, mockSuppliers } from '@/lib/mock-data';
@@ -14,6 +15,7 @@ export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>(mockInventoryItems);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showReleaseModal, setShowReleaseModal] = useState(false);
+  const [showIssueModal, setShowIssueModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const { permissions } = useTenant();
 
@@ -40,6 +42,29 @@ export default function InventoryPage() {
   const handleStockReceive = (item: InventoryItem) => {
     // In production, this would open a stock receive modal
     console.log('Receive stock for:', item);
+  };
+
+  const handleIssue = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setShowIssueModal(true);
+  };
+
+  const handleItemIssuance = (movement: Omit<StockMovement, 'id' | 'date'>) => {
+    setItems(prevItems =>
+      prevItems.map(item => {
+        if (item.id === movement.inventoryItemId) {
+          const newQuantity = item.quantity - movement.quantity;
+          return {
+            ...item,
+            quantity: Math.max(0, newQuantity),
+            updatedAt: new Date(),
+          };
+        }
+        return item;
+      })
+    );
+    // In production, you would also save the movement to your database
+    console.log('Item issued:', movement);
   };
 
   const handleAddItem = (newItemData: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -103,6 +128,7 @@ export default function InventoryPage() {
         onView={handleView}
         onStockRelease={handleStockRelease}
         onStockReceive={handleStockReceive}
+        onIssue={handleIssue}
       />
 
       {/* Add Item Modal */}
@@ -120,6 +146,14 @@ export default function InventoryPage() {
         onOpenChange={setShowReleaseModal}
         item={selectedItem}
         onStockRelease={handleStockMovement}
+      />
+
+      {/* Issue Item Modal */}
+      <IssueItemModal
+        open={showIssueModal}
+        onOpenChange={setShowIssueModal}
+        item={selectedItem}
+        onIssue={handleItemIssuance}
       />
     </div>
   );

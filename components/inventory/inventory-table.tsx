@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Eye, Search, Filter, Minus, Plus } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Eye, Search, Filter, Minus, Plus, User } from 'lucide-react';
 import { useTenant } from '@/contexts/tenant-context';
 
 interface InventoryTableProps {
@@ -29,6 +29,7 @@ interface InventoryTableProps {
   onView: (item: InventoryItem) => void;
   onStockRelease?: (item: InventoryItem) => void;
   onStockReceive?: (item: InventoryItem) => void;
+  onIssue?: (item: InventoryItem) => void;
 }
 
 export function InventoryTable({ 
@@ -37,7 +38,8 @@ export function InventoryTable({
   onDelete, 
   onView, 
   onStockRelease,
-  onStockReceive 
+  onStockReceive,
+  onIssue
 }: InventoryTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -175,6 +177,13 @@ export function InventoryTable({
                           <DropdownMenuItem onClick={() => onStockRelease(item)}>
                             <Minus className="h-4 w-4 mr-2" />
                             Release Stock
+                          </DropdownMenuItem>
+                        )}
+
+                        {onIssue && item.quantity > 0 && (
+                          <DropdownMenuItem onClick={() => onIssue(item)}>
+                            <User className="h-4 w-4 mr-2" />
+                            Issue Item
                           </DropdownMenuItem>
                         )}
 
