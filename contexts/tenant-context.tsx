@@ -117,6 +117,10 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     canViewAnalytics: false,
     canManageSuppliers: false,
     canManageCategories: false,
+    canManageWarehouses: false,
+    canManageTransfers: false,
+    canReceiveStock: false,
+    canDisposeStock: false,
   };
 
   const isCEO = currentUser?.role === 'ceo';

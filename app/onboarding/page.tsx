@@ -86,6 +86,9 @@ export default function OnboardingPage() {
 
   const progress = (currentStep / steps.length) * 100;
 
+  // Fix: assign icon to a variable for JSX usage
+  const StepIcon = steps[currentStep - 1].icon;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
@@ -98,7 +101,7 @@ export default function OnboardingPage() {
             <h1 className="text-3xl font-bold text-gray-900">InventoryPro</h1>
           </div>
           <p className="text-lg text-gray-600">
-            Let's set up your inventory management system
+            Let us set up your inventory management system
           </p>
         </div>
 
@@ -137,7 +140,7 @@ export default function OnboardingPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <steps[currentStep - 1].icon className="h-5 w-5" />
+              <StepIcon className="h-5 w-5" />
               {steps[currentStep - 1].title}
             </CardTitle>
           </CardHeader>

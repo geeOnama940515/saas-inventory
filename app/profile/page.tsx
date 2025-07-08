@@ -36,7 +36,41 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState<{
+    // Personal Information
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    jobTitle: string;
+    department: string;
+    bio: string;
+    // Password Change
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+    // Notification Preferences
+    emailNotifications: {
+      lowStock: boolean;
+      newOrders: boolean;
+      weeklyReports: boolean;
+      systemUpdates: boolean;
+    };
+    pushNotifications: {
+      lowStock: boolean;
+      newOrders: boolean;
+      systemUpdates: boolean;
+    };
+    // Privacy Settings
+    profileVisibility: string;
+    showEmail: boolean;
+    showPhone: boolean;
+    // Regional Settings
+    language: string;
+    timezone: string;
+    dateFormat: string;
+    [key: string]: any; // <-- add index signature
+  }>({
     // Personal Information
     firstName: currentUser?.name?.split(' ')[0] || '',
     lastName: currentUser?.name?.split(' ')[1] || '',
@@ -45,12 +79,10 @@ export default function ProfilePage() {
     jobTitle: '',
     department: '',
     bio: '',
-    
     // Password Change
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
-    
     // Notification Preferences
     emailNotifications: {
       lowStock: true,
@@ -63,12 +95,10 @@ export default function ProfilePage() {
       newOrders: false,
       systemUpdates: false,
     },
-    
     // Privacy Settings
     profileVisibility: 'team',
     showEmail: true,
     showPhone: false,
-    
     // Regional Settings
     language: 'en',
     timezone: currentTenant?.settings.timezone || 'America/New_York',
@@ -85,7 +115,7 @@ export default function ProfilePage() {
     setProfileData(prev => ({
       ...prev,
       [parent]: {
-        ...prev[parent as keyof typeof prev],
+        ...prev[parent],
         [field]: value
       }
     }));

@@ -24,24 +24,56 @@ import { useTenant } from '@/contexts/tenant-context';
 
 export default function SettingsPage() {
   const { currentTenant, currentUser } = useTenant();
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<{
+    // Company Settings
+    companyName: string;
+    companyDescription: string;
+    website: string;
+    industry: string;
+    // Regional Settings
+    currency: string;
+    timezone: string;
+    dateFormat: string;
+    numberFormat: string;
+    // Inventory Settings
+    lowStockThreshold: number;
+    autoReorderEnabled: boolean;
+    barcodeFormat: string;
+    // Notification Settings
+    emailNotifications: {
+      lowStock: boolean;
+      newOrders: boolean;
+      weeklyReports: boolean;
+      systemUpdates: boolean;
+    };
+    smsNotifications: {
+      criticalAlerts: boolean;
+      lowStock: boolean;
+    };
+    // Security Settings
+    twoFactorEnabled: boolean;
+    sessionTimeout: number;
+    passwordPolicy: string;
+    // Display Settings
+    theme: string;
+    compactMode: boolean;
+    showTutorials: boolean;
+    [key: string]: any; // <-- add index signature
+  }>({
     // Company Settings
     companyName: currentTenant?.name || '',
     companyDescription: '',
     website: '',
     industry: '',
-    
     // Regional Settings
     currency: currentTenant?.settings.currency || 'USD',
     timezone: currentTenant?.settings.timezone || 'America/New_York',
     dateFormat: 'MM/DD/YYYY',
     numberFormat: 'US',
-    
     // Inventory Settings
     lowStockThreshold: currentTenant?.settings.lowStockThreshold || 10,
     autoReorderEnabled: false,
     barcodeFormat: 'CODE128',
-    
     // Notification Settings
     emailNotifications: {
       lowStock: true,
@@ -53,12 +85,10 @@ export default function SettingsPage() {
       criticalAlerts: false,
       lowStock: false,
     },
-    
     // Security Settings
     twoFactorEnabled: false,
     sessionTimeout: 60,
     passwordPolicy: 'medium',
-    
     // Display Settings
     theme: 'light',
     compactMode: false,
@@ -73,7 +103,7 @@ export default function SettingsPage() {
     setSettings(prev => ({
       ...prev,
       [parent]: {
-        ...prev[parent as keyof typeof prev],
+        ...prev[parent],
         [field]: value
       }
     }));
